@@ -1,0 +1,9 @@
+FROM redis:7.2
+
+# 필요하다면 redis.conf 등을 COPY해서 커스터마이징
+# COPY redis.conf /usr/local/etc/redis/redis.conf
+
+#기본 설정
+CMD ["redis-server"]
+#설정파일
+# CMD ["redis-server", "/usr/local/etc/redis/redis.conf"]

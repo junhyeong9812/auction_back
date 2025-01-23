@@ -1,0 +1,26 @@
+version: '3'
+services:
+#  app:
+#    build:
+#      # compose 파일이 "docker/dev/" 위치에 있고,
+#      # 실제 빌드 컨텍스트(=프로젝트 루트)로 가려면 "../.." 사용
+#      context: ../..
+#      # Dockerfile은 "docker/app/Dockerfile.app"
+#      dockerfile: docker/app/Dockerfile.app
+#    container_name: my-auction-app
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - redis
+#    environment:
+#      SPRING_REDIS_HOST: "redis"
+#      SPRING_REDIS_PORT: "6379"
+#      # 필요 시 DB URL, 포트 등 추가
+
+  redis:
+    build:
+      context: ../..
+      dockerfile: docker/redis/Dockerfile.redis
+    container_name: my-custom-redis
+    ports:
+      - "6379:6379"
