@@ -7,7 +7,7 @@ import com.auction.back.domain.payment.enums.PaymentStatus;
 import com.auction.back.domain.payment.infrastructure.PortOneApiClient;
 import com.auction.back.domain.payment.repository.PaymentRepository;
 import com.auction.back.domain.user.entity.User;
-import com.auction.back.domain.user.service.UserQueryService;
+import com.auction.back.domain.user.service.query.UserQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,6 +87,9 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
         double updatedPoint = user.getPointBalance();  // 결제 후 최신 포인트
         String message = isSuccess ? "결제 및 포인트 충전 성공" : "결제 실패 혹은 취소";
 
+        //8)테스트용 충전 후 환불
+        cancelPayment(requestDto.getImpUid());
+
         return PaymentResponseDto.builder()
                 .success(isSuccess)
                 .updatedPoint(updatedPoint)
@@ -96,17 +99,23 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
 
     @Override
     public boolean cancelPayment(String impUid) {
-        // 1) 포트원에 취소 요청
+        // 1) PortOne에 실제 취소 요청
         boolean success = portOneApiClient.cancelPayment(impUid, "사용자 요청 환불");
         if (!success) {
-            return false;
+            return false; // 환불 실패
         }
 
         // 2) DB Payment 상태 업데이트
         Payment payment = paymentRepository.findByImpUid(impUid)
                 .orElseThrow(() -> new RuntimeException("Payment Not Found - impUid=" + impUid));
-        payment.setStatus(PaymentStatus.CANCELED);
 
+        // 엔티티 내부 메서드로 상태 변경
+        payment.updateStatus(PaymentStatus.CANCELED);
+
+        // 필요하다면, 포인트 환불 로직도 추가 가능:
+        // if (payment.getStatus() == PaymentStatus.PAID) {
+        //    payment.getUser().usePoint(payment.getPaidAmount());
+        // }
 
         return true;
     }

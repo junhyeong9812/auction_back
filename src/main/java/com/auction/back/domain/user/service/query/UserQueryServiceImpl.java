@@ -1,4 +1,4 @@
-package com.auction.back.domain.user.service;
+package com.auction.back.domain.user.service.query;
 
 import com.auction.back.domain.user.entity.User;
 import com.auction.back.domain.user.repository.UserRepository;

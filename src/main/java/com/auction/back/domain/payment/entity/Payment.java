@@ -54,4 +54,8 @@ public class Payment {
             user.chargePoint(this.paidAmount);
         }
     }
+    //결제 상태를 업데이트
+    public void updateStatus(PaymentStatus newStatus) {
+        this.status = newStatus;
+    }
 }

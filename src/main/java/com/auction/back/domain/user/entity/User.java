@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "users") // 테이블명은 예시
+@Table(name = "users")
 @Getter
 @Builder
 @AllArgsConstructor
@@ -16,7 +16,15 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;              // PK
+    private Long id;
+
+    // 로그인에 쓰일 이메일
+    @Column(nullable = false, length = 100, unique = true)
+    private String email;
+
+    // 비밀번호 (인코딩해서 저장)
+    @Column(nullable = false, length = 200)
+    private String password;
 
     @Column(nullable = false, length = 50)
     private String name;          // 이름
@@ -24,14 +32,11 @@ public class User {
     @Column(nullable = false, length = 50, unique = true)
     private String nickname;      // 닉네임
 
-    @Column(nullable = false, length = 100, unique = true)
-    private String email;         // 이메일
-
     @Column(length = 20)
     private String phoneNumber;   // 전화번호
 
-    @Column(length = 255)
-    private String introduction;  // 한줄소개
+    @Column
+    private int age;          // 나이
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -46,22 +51,13 @@ public class User {
     private UserRole role;        // ADMIN, USER
 
     @Column(nullable = false)
-    private double pointBalance;    //사용자 포인트 잔액
+    private double pointBalance;  // 포인트 잔액
 
-    /**
-     * 포인트 충전 메서드
-     * - 결제 완료시 chargePoint(amount)를 호출
-     */
     public void chargePoint(double amount) {
         this.pointBalance += amount;
     }
 
-    /**
-     * 포인트 사용 메서드
-     * - 경매 입찰/결제 등에서 사용
-     */
     public void usePoint(double amount) {
-        // 잔액 체크 로직 필요 (this.pointBalance >= amount 등)
         this.pointBalance -= amount;
     }
 }
