@@ -70,6 +70,9 @@ public class Auction {
     // 낙찰 금액
     private Double finalPrice;
 
+    @Column
+    private LocalDateTime finalEndTime;
+
     //== 편의 메서드 ==//
     public void updateImage(String filename) {
         this.image = filename;
@@ -82,6 +85,9 @@ public class Auction {
     public void setWinner(User winner, double price) {
         this.winner = winner;
         this.finalPrice = price;
+    }
+    public void setFinalEndTime(LocalDateTime finalEndTime) {
+        this.endTime = finalEndTime; // DB의 endTime을 덮어씀
     }
 
     /**

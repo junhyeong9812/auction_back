@@ -48,12 +48,14 @@ public class AuctionScheduler {
     }
 
     /**
-     * 1초마다 스케줄링으로 scheduled(예정상태)인 경매 중 startTime 지난 것들을 ONGOING으로 바꾸는 로직도 가능
+     * 1초마다 SCHEDULED 상태 경매 중
+     * 시작시간이 지났으면 ONGOING으로 변경 & Redis에 시작가/마감시간 저장
      */
     @Scheduled(fixedRate = 1000)
     public void checkAuctionStart() {
         List<Auction> scheduledAuctions = auctionRepository.findByStatus(AuctionStatus.SCHEDULED);
         LocalDateTime now = LocalDateTime.now();
+
         for (Auction auction : scheduledAuctions) {
             if (!now.isBefore(auction.getStartTime())) {
                 // 경매 시작
@@ -61,57 +63,91 @@ public class AuctionScheduler {
                 auctionRepository.save(auction);
 
                 log.info("경매 시작: auctionId={}", auction.getId());
+
+                // Redis에 초기 최고가(= startPrice), 마감시간(= now+30분) 저장
+                initRedisForOngoingAuction(auction);
             }
         }
     }
 
+    /**
+     * 경매를 마감 처리
+     */
     private void doEndAuction(Auction auction) {
         long auctionId = auction.getId();
+        log.info("경매 마감 처리 시도. auctionId={}", auctionId);
 
-        String highestPriceStr = redisService.getValue("auction:" + auctionId + ":highestPrice");
-        String highestBidderEmail = redisService.getValue("auction:" + auctionId + ":highestBidder");
+        // 최고가 & 최고입찰자
+        String prefix = "auction:" + auctionId + ":";
+        String highestPriceStr = redisService.getValue(prefix + "highestPrice");
+        String highestBidderEmail = redisService.getValue(prefix + "highestBidder");
+        String FinalEndTime=redisService.getValue(prefix + "endTime");
         double highestPrice = (highestPriceStr == null) ? 0.0 : Double.parseDouble(highestPriceStr);
 
-        // 경매 종료 처리
+        // DB 경매 상태 = ENDED
         auction.updateStatus(AuctionStatus.ENDED);
 
-        // 낙찰자
         if (highestBidderEmail != null) {
-            // 낙찰자
             User winner = userQueryService.findByEmail(highestBidderEmail);
 
-            // 낙찰자 포인트 차감(혹은 이미 차감했을 수도 있음)
-            // 여기서는 "최종 차감" 방식이라고 가정
+            // 낙찰자 포인트 차감(이미 차감 정책이라면 skip)
             if (winner.getPointBalance() < highestPrice) {
-                // 포인트 부족 -> 실무에선 낙찰 무효 or 예외 처리
                 log.warn("낙찰자 포인트 부족. auctionId={}, bidder={}", auctionId, highestBidderEmail);
+                // 예: 낙찰 무효 or 다음 최고입찰자 로직 등
             } else {
                 winner.usePoint(highestPrice);
-                log.info("낙찰자 포인트 차감. user={}, amount={}", winner.getEmail(), highestPrice);
             }
 
             // 판매자 포인트 증가
             User seller = auction.getSeller();
             if (seller != null) {
                 seller.chargePoint(highestPrice);
-                log.info("판매자 포인트 증가. seller={}, amount={}", seller.getEmail(), highestPrice);
             }
 
-            // 엔티티에 낙찰자/금액 기록
             auction.setWinner(winner, highestPrice);
+            log.info("낙찰 완료. winner={}, price={}", winner.getEmail(), highestPrice);
+            auction.setFinalEndTime(LocalDateTime.parse(FinalEndTime));
         } else {
-            // 낙찰자가 없음 → 유찰
+            // 유찰
             auction.setWinner(null, 0.0);
         }
 
-        // DB save
         auctionRepository.save(auction);
-
-        // Redis key 정리
-        // redisService.deleteValue("auction:" + auctionId + ":endTime");
-        // redisService.deleteValue("auction:" + auctionId + ":highestPrice");
-        // redisService.deleteValue("auction:" + auctionId + ":highestBidder");
+        cleanUpRedisKeys(auctionId);
         log.info("경매 마감 완료. auctionId={}", auctionId);
     }
 
+    /**
+     * 경매를 ONGOING으로 전환할 때,
+     * Redis에 초기 최고가/마감시간(30분 뒤) 등을 세팅
+     */
+    private void initRedisForOngoingAuction(Auction auction) {
+        long auctionId = auction.getId();
+        String prefix = "auction:" + auctionId + ":";
+
+        // 최고가 = startPrice
+        redisService.setValue(prefix + "highestPrice",
+                String.valueOf(auction.getStartPrice()),
+                0);
+
+        // 현재시각 + 30분
+//        LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
+        LocalDateTime endTime = auction.getEndTime();
+        redisService.setValue(prefix + "endTime", endTime.toString(), 0);
+
+        // 최고입찰자, 상태 등 필요하면 추가
+        redisService.setValue(prefix + "highestBidder", "", 0);
+        redisService.setValue(prefix + "status", "ONGOING", 0);
+    }
+
+    /**
+     * 경매 종료 후 Redis 키 정리
+     */
+    private void cleanUpRedisKeys(Long auctionId) {
+        String prefix = "auction:" + auctionId + ":";
+        redisService.deleteValue(prefix + "highestPrice");
+        redisService.deleteValue(prefix + "highestBidder");
+        redisService.deleteValue(prefix + "endTime");
+        redisService.deleteValue(prefix + "status");
+    }
 }
