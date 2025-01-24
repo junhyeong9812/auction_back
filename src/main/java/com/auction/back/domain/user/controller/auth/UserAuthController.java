@@ -1,5 +1,6 @@
 package com.auction.back.domain.user.controller.auth;
 
+import com.auction.back.domain.user.dto.request.EmailLoginRequestDto;
 import com.auction.back.domain.user.dto.request.LoginRequestDto;
 import com.auction.back.domain.user.dto.response.TokenResponse;
 import com.auction.back.domain.user.service.auth.UserAuthService;
@@ -78,6 +79,38 @@ public class UserAuthController {
             response.addHeader("Set-Cookie", newAccessCookie.toString());
 
             return ResponseEntity.ok("새 Access Token 발급됨 (쿠키로 전달)");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 이메일만으로 로그인 (테스트용)
+     */
+    @PostMapping("/emailLogin")
+    public ResponseEntity<?> emailLogin(@RequestBody EmailLoginRequestDto dto,
+                                        HttpServletResponse response) {
+        try {
+            // 1) 이메일만으로 로그인
+            TokenResponse tokenResponse = userAuthService.emailOnlyLogin(dto.getEmail());
+
+            // 2) 쿠키 생성
+            long accessTokenExpireSeconds = 30 * 60; // 30분
+            ResponseCookie accessCookie = createCookie("ACCESS_TOKEN",
+                    tokenResponse.getAccessToken(),
+                    accessTokenExpireSeconds,
+                    true);
+
+            long refreshTokenExpireSeconds = 24 * 60 * 60; // 1일
+            ResponseCookie refreshCookie = createCookie("REFRESH_TOKEN",
+                    tokenResponse.getRefreshToken(),
+                    refreshTokenExpireSeconds,
+                    true);
+
+            response.addHeader("Set-Cookie", accessCookie.toString());
+            response.addHeader("Set-Cookie", refreshCookie.toString());
+
+            return ResponseEntity.ok("이메일 로그인 성공");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

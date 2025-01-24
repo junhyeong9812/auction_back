@@ -6,4 +6,5 @@ import com.auction.back.domain.user.dto.response.TokenResponse;
 public interface UserAuthService {
     public TokenResponse login(LoginRequestDto dto);
     public TokenResponse reIssueAccessToken(String refreshToken);
+    public TokenResponse emailOnlyLogin(String email);
 }

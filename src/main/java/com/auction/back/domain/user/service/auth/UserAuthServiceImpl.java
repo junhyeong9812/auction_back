@@ -64,4 +64,23 @@ public class UserAuthServiceImpl implements UserAuthService {
         return new TokenResponse(newAccessToken, refreshToken);
         // Refresh는 그대로 재사용
     }
+
+    /**
+     * 새로 추가: 이메일만으로 로그인 (패스워드 무시)
+     * 테스트/시연용
+     */
+    public TokenResponse emailOnlyLogin(String email) {
+        User user = userQueryService.findByEmail(email);
+        return issueTokens(user.getEmail());
+    }
+    /**
+     * 공통: 토큰 발급 & Redis 저장
+     */
+    private TokenResponse issueTokens(String email) {
+        String accessToken = tokenProvider.createAccessToken(email);
+        String refreshToken = tokenProvider.createRefreshToken(email);
+
+        redisService.setValue("RT:" + email, refreshToken, 86400); // 1일
+        return new TokenResponse(accessToken, refreshToken);
+    }
 }

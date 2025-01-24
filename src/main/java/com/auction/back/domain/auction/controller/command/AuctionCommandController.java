@@ -35,7 +35,7 @@ public class AuctionCommandController {
      * 경매 취소
      */
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelAuction(@PathVariable Long id,
+    public ResponseEntity<?> cancelAuction(@PathVariable("id") Long id,
                                            HttpServletRequest request) {
         try {
             String userEmail = "testUser@example.com";
