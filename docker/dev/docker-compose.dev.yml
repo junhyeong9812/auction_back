@@ -20,7 +20,7 @@ services:
   redis:
     build:
       context: ../..
-      dockerfile: docker/redis/Dockerfile.redis
+      dockerfile: docker/redis/Dockerfile-redis
     container_name: my-custom-redis
     ports:
       - "6379:6379"
