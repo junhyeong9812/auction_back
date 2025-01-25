@@ -26,8 +26,10 @@ public class AuctionScheduler {
     /**
      * 1초마다 진행중(ONGOING)인 경매 중에서, endTime 지난 것들을 검색 → 마감 처리
      */
-    @Scheduled(fixedRate = 1000)
+//    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedDelay = 1000)
     public void checkAuctionEnd() {
+        System.out.println("checkAuctionEnd동작 ");
         // 1) ONGOING 상태의 경매를 DB에서 조회
         List<Auction> ongoingAuctions = auctionRepository.findByStatus(AuctionStatus.ONGOING);
 
@@ -51,8 +53,10 @@ public class AuctionScheduler {
      * 1초마다 SCHEDULED 상태 경매 중
      * 시작시간이 지났으면 ONGOING으로 변경 & Redis에 시작가/마감시간 저장
      */
-    @Scheduled(fixedRate = 1000)
+//    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedDelay = 1000)
     public void checkAuctionStart() {
+        System.out.println("checkAuctionStart동작 ");
         List<Auction> scheduledAuctions = auctionRepository.findByStatus(AuctionStatus.SCHEDULED);
         LocalDateTime now = LocalDateTime.now();
 
@@ -128,16 +132,16 @@ public class AuctionScheduler {
         // 최고가 = startPrice
         redisService.setValue(prefix + "highestPrice",
                 String.valueOf(auction.getStartPrice()),
-                0);
+                3600L);
 
         // 현재시각 + 30분
 //        LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
         LocalDateTime endTime = auction.getEndTime();
-        redisService.setValue(prefix + "endTime", endTime.toString(), 0);
+        redisService.setValue(prefix + "endTime", endTime.toString(), 3600L);
 
         // 최고입찰자, 상태 등 필요하면 추가
-        redisService.setValue(prefix + "highestBidder", "", 0);
-        redisService.setValue(prefix + "status", "ONGOING", 0);
+        redisService.setValue(prefix + "highestBidder", "", 3600L);
+        redisService.setValue(prefix + "status", "ONGOING", 3600L);
     }
 
     /**

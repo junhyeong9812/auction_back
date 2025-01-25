@@ -58,7 +58,7 @@ public class Auction {
     @Column(nullable = false, length = 10)
     private AuctionStatus status; // SCHEDULED, ONGOING, ENDED, CANCELED
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
     private User seller;
 

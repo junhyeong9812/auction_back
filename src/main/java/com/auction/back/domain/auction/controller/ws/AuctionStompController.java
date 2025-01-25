@@ -11,6 +11,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
+
 @Controller
 @RequiredArgsConstructor
 public class AuctionStompController {
@@ -24,9 +26,11 @@ public class AuctionStompController {
      * 로 전송 시 호출됨
      */
     @MessageMapping("/auction/{auctionId}/bid")
-    public void handleBid(@DestinationVariable Long auctionId, BidMessage bidMessage) {
+    public void handleBid(@DestinationVariable Long auctionId, BidMessage bidMessage, Principal principal) {
         // 1) SecurityContext에서 userEmail
-        String userEmail = SecurityUtils.getCurrentUserEmail();
+//        String userEmail = SecurityUtils.getCurrentUserEmail();
+        String userEmail = principal.getName();
+        System.out.println("userEmail표출된 유저이메일 = " + userEmail);
         try {
         // 2) 비즈니스 로직: 입찰 검증 & Redis 업데이트 등
         BidResultDto resultDto = auctionWebSocketService.placeBid(auctionId, bidMessage.getBidAmount(), userEmail);
@@ -40,8 +44,9 @@ public class AuctionStompController {
                     e.getMessage() // 예: "포인트 부족" 등
             );
 
-            messagingTemplate.convertAndSend(
-                    "/topic/auction/" + auctionId,
+            messagingTemplate.convertAndSendToUser(
+                    userEmail,           // = Principal.getName()
+                    "/queue/errors",     // = /user/queue/errors
                     errorDto
             );
         }

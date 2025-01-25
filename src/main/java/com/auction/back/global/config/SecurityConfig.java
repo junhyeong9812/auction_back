@@ -47,6 +47,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of("*")); // 허용할 요청 헤더
         configuration.setAllowCredentials(true); // 쿠키 허용
         configuration.setMaxAge(3600L); // 캐시 지속 시간 (초 단위)
+        configuration.setExposedHeaders(List.of("Set-Cookie"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // 모든 경로에 대해 CORS 설정 적용

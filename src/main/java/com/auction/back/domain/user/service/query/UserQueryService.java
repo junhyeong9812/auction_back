@@ -5,7 +5,7 @@ import com.auction.back.domain.user.entity.User;
 import java.util.List;
 
 public interface UserQueryService {
-    public User findByEmail(String email);
+    User findByEmail(String email);
     // 유저 전체 조회
     List<User> findAllUsers();
 }

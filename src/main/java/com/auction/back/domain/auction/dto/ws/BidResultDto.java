@@ -9,5 +9,6 @@ public class BidResultDto {
     private Long auctionId;
     private String bidderEmail;
     private double highestPrice;
-    private boolean success = true;
+    private boolean success;
+    private String newEndTime;
 }
