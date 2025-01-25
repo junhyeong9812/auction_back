@@ -66,8 +66,8 @@ public class AuctionWebSocketServiceImpl implements AuctionWebSocketService {
         System.out.println("최고가 확인 오케이 ");
 
         // 4) 입찰 성공 => 최고가, 최고입찰자 갱신
-        redisService.setValue(highestPriceKey, String.valueOf(bidAmount), 3600L);
-        redisService.setValue(highestBidderKey, userEmail, 3600L);
+        redisService.setValue(highestPriceKey, String.valueOf(bidAmount), 600L);
+        redisService.setValue(highestBidderKey, userEmail, 600L);
         System.out.println("갱신 확인  ");
         // ex) 마감 3분 전 입찰 시 5분 연장 = dynamicEndTime.plusMinutes(5)
         //     if(남은시간 <=3분) => dynamicEndTime = now.plusMinutes(5)
@@ -75,7 +75,7 @@ public class AuctionWebSocketServiceImpl implements AuctionWebSocketService {
         // 5) 마감 3분 이하 시 5분 연장
         if (minutesLeft <= 3) {
             LocalDateTime newEndTime = LocalDateTime.now().plusMinutes(5);
-            redisService.setValue(endTimeKey, newEndTime.toString(), 3600L);
+            redisService.setValue(endTimeKey, newEndTime.toString(), 600L);
 
             // dto에 담을 String endTime
             return new BidResultDto(
