@@ -51,7 +51,7 @@ public class Payment {
     // 결제 완료 후 User에게 포인트 반영 (포인트 충전용 결제라고 가정)
     public void applyPointToUser() {
         if (this.status == PaymentStatus.PAID && user != null) {
-            user.chargePoint(this.paidAmount);
+            user.chargePoint(this.paidAmount*1000);
         }
     }
     //결제 상태를 업데이트

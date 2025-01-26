@@ -121,6 +121,7 @@ public class UserAuthController {
      */
     private ResponseCookie createCookie(String name, String value, long maxAgeSeconds, boolean httpOnly) {
         return ResponseCookie.from(name, value)
+//                .domain("pinjun.xyz")
                 .httpOnly(httpOnly)    // JS에서 쿠키 읽기 불가
                 .secure(true)          // HTTPS 사용 시 true (로컬개발시엔 false)
                 .path("/")
