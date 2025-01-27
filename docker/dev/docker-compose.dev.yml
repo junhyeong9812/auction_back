@@ -24,3 +24,30 @@ services:
     container_name: my-custom-redis
     ports:
       - "6379:6379"
+  nginx:
+    # Nginx 이미지를 사용
+    image: nginx:alpine
+    container_name: local-nginx
+    # 80, 443 포트를 호스트에 바인딩
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Nginx 설정 파일 마운트
+      - ../nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # Certbot webroot + 인증서 디렉토리
+      - ../certbot/www:/var/www/certbot
+      - ../certbot/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - certbot
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    container_name: local-certbot
+    volumes:
+      - ../certbot/www:/var/www/certbot
+      - ../certbot/letsencrypt:/etc/letsencrypt
+    # entrypoint를 /bin/sh로 해두고,
+    # 인증서 발급 시: docker-compose run --rm certbot certbot certonly ...
+#    entrypoint: /bin/sh
