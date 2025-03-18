@@ -43,6 +43,7 @@ public class AuctionScheduledService {
         }
     }
 
+
     /**
      * SCHEDULED 경매 중 시작시간이 지난 것 ONGOING 전환
      */
