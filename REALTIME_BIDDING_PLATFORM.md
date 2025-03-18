@@ -6,7 +6,6 @@
 
 ## 2. 시스템 아키텍처 (System Architecture)
 
-![시스템 아키텍처](https://github.com/user-attachments/assets/3a99a780-6c69-41b3-8bf6-3aa22a95b015)
 
 ```
 ┌───────────────┐       ┌───────────────┐      ┌────────────────┐
